@@ -1,0 +1,164 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: Digital Account
+servers:
+  - url: 'http://localhost:8080'
+    description: local
+paths:
+  /accounts:
+    post:
+      tags:
+        - accounts
+      summary: Creates a new Account
+      requestBody:
+        $ref: '#/components/requestBodies/AccountCreate'
+      responses:
+        201:
+          $ref: '#/components/responses/Account'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        422:
+          $ref: '#/components/responses/ValidationErrors'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/{accountId}:
+    get:
+      tags:
+        - accounts
+      responses:
+        201:
+          $ref: '#/components/responses/Account'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        422:
+          $ref: '#/components/responses/ValidationErrors'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+
+  /transactions:
+    post:
+      tags:
+        - transactions
+      summary: Creates a new Transaction
+      requestBody:
+        $ref: '#/components/requestBodies/TransactionCreate'
+      responses:
+        201:
+          $ref: '#/components/responses/Transaction'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        422:
+          $ref: '#/components/responses/ValidationErrors'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+components:
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      description: the account id
+      schema:
+        type: integer
+  requestBodies:
+    AccountCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              document_number:
+                type: string
+                example: "12345678900"
+            required:
+              - document_number
+    TransactionCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              account_id:
+                type: integer
+                example: 1
+              operation_type_id:
+                type: integer
+                example: 4
+              amount:
+                type: number
+                example: 123.45
+            required:
+              - account_id
+              - operation_type_id
+              - amount
+  responses:
+    Account:
+      description: Account response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              account_id:
+                type: integer
+                example: 1
+              document_number:
+                type: string
+                example: "12345678900"
+    Transaction:
+      description: Transaction response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              account_id:
+                type: integer
+                example: 1
+              operation_type_id:
+                type: integer
+                example: 4
+              amount:
+                type: number
+                example: 123.45
+    BadRequest:
+      description: The request cannot be processed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error
+    ValidationErrors:
+      description: Validation Errors
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        status:
+          type: integer
+        source:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string

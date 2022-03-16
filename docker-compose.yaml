@@ -1,0 +1,38 @@
+version: '3.2'
+
+services:
+  app.digital-account.dev:
+    container_name: app.digital-account.dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db.digital-account.dev
+    depends_on:
+      - db.digital-account.dev
+    networks:
+      - backend
+  db.digital-account.dev:
+    image: mariadb:10.7.3
+    container_name: db.digital-account.dev
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+    volumes:
+      - mysql_data:/mysql_data/db
+    ports:
+      - '${DB_PORT}:3306'
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - backend
+volumes:
+  mysql_data:
+networks:
+  backend:
+
