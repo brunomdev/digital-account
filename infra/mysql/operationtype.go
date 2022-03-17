@@ -16,7 +16,7 @@ func NewOperationTypeRepository(db *sql.DB) operationtype.Repository {
 }
 
 func (r operationTypeRepository) GetByID(ctx context.Context, id int) (*entity.OperationType, error) {
-	stmt, err := r.db.PrepareContext(ctx, `select id, description from operation_types where id = ?`)
+	stmt, err := r.db.PrepareContext(ctx, `SELECT id, description FROM operation_types WHERE id = ?`)
 	if err != nil {
 		return nil, err
 	}
