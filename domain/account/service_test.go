@@ -12,8 +12,9 @@ import (
 
 func Test_service_Create(t *testing.T) {
 	type args struct {
-		ctx       context.Context
-		docNumber string
+		ctx                  context.Context
+		docNumber            string
+		availableCreditLimit float64
 	}
 	testCases := []struct {
 		name    string
@@ -27,7 +28,7 @@ func Test_service_Create(t *testing.T) {
 			svcArgs: func(ctrl *gomock.Controller) Repository {
 				repo := mock_account.NewMockRepository(ctrl)
 
-				repo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, errors.New("database error"))
+				repo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("database error"))
 
 				return repo
 			},
@@ -42,11 +43,12 @@ func Test_service_Create(t *testing.T) {
 			svcArgs: func(ctrl *gomock.Controller) Repository {
 				repo := mock_account.NewMockRepository(ctrl)
 
-				repo.EXPECT().Save(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, docNumber string) (*entity.Account, error) {
+				repo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error) {
 						return &entity.Account{
-							ID:             1,
-							DocumentNumber: docNumber,
+							ID:                   1,
+							DocumentNumber:       docNumber,
+							AvailabelCreditLimit: availableCreditLimit,
 						}, nil
 					})
 
@@ -70,7 +72,7 @@ func Test_service_Create(t *testing.T) {
 
 			s := NewService(tc.svcArgs(ctrl))
 
-			got, err := s.Create(tc.args.ctx, tc.args.docNumber)
+			got, err := s.Create(tc.args.ctx, tc.args.docNumber, tc.args.availableCreditLimit)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tc.wantErr)
 				return
@@ -116,8 +118,9 @@ func Test_service_Get(t *testing.T) {
 				repo.EXPECT().GetByID(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, id int) (*entity.Account, error) {
 						return &entity.Account{
-							ID:             id,
-							DocumentNumber: "12345678900",
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 5000.00,
 						}, nil
 					})
 
@@ -127,8 +130,9 @@ func Test_service_Get(t *testing.T) {
 				id: 1,
 			},
 			want: &entity.Account{
-				ID:             1,
-				DocumentNumber: "12345678900",
+				ID:                   1,
+				DocumentNumber:       "12345678900",
+				AvailabelCreditLimit: 5000.00,
 			},
 			wantErr: false,
 		},

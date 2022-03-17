@@ -36,18 +36,18 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockService) Create(ctx context.Context, docNumber string) (*entity.Account, error) {
+func (m *MockService) Create(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, docNumber)
+	ret := m.ctrl.Call(m, "Create", ctx, docNumber, availableCreditLimit)
 	ret0, _ := ret[0].(*entity.Account)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockServiceMockRecorder) Create(ctx, docNumber interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Create(ctx, docNumber, availableCreditLimit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockService)(nil).Create), ctx, docNumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockService)(nil).Create), ctx, docNumber, availableCreditLimit)
 }
 
 // Get mocks base method.
@@ -63,6 +63,21 @@ func (m *MockService) Get(ctx context.Context, id int) (*entity.Account, error) 
 func (mr *MockServiceMockRecorder) Get(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), ctx, id)
+}
+
+// UpdateCreditLimit mocks base method.
+func (m *MockService) UpdateCreditLimit(ctx context.Context, id int, availableCreditLimit float64) (*entity.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCreditLimit", ctx, id, availableCreditLimit)
+	ret0, _ := ret[0].(*entity.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCreditLimit indicates an expected call of UpdateCreditLimit.
+func (mr *MockServiceMockRecorder) UpdateCreditLimit(ctx, id, availableCreditLimit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCreditLimit", reflect.TypeOf((*MockService)(nil).UpdateCreditLimit), ctx, id, availableCreditLimit)
 }
 
 // MockRepository is a mock of Repository interface.
@@ -104,16 +119,31 @@ func (mr *MockRepositoryMockRecorder) GetByID(ctx, id interface{}) *gomock.Call 
 }
 
 // Save mocks base method.
-func (m *MockRepository) Save(ctx context.Context, docNumber string) (*entity.Account, error) {
+func (m *MockRepository) Save(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, docNumber)
+	ret := m.ctrl.Call(m, "Save", ctx, docNumber, availableCreditLimit)
 	ret0, _ := ret[0].(*entity.Account)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Save indicates an expected call of Save.
-func (mr *MockRepositoryMockRecorder) Save(ctx, docNumber interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Save(ctx, docNumber, availableCreditLimit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockRepository)(nil).Save), ctx, docNumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockRepository)(nil).Save), ctx, docNumber, availableCreditLimit)
+}
+
+// Update mocks base method.
+func (m *MockRepository) Update(ctx context.Context, account *entity.Account) (*entity.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, account)
+	ret0, _ := ret[0].(*entity.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockRepositoryMockRecorder) Update(ctx, account interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRepository)(nil).Update), ctx, account)
 }

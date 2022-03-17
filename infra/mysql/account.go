@@ -15,13 +15,13 @@ func NewAccountRepository(db *sql.DB) account.Repository {
 	return &accountRepository{db: db}
 }
 
-func (r *accountRepository) Save(ctx context.Context, docNumber string) (*entity.Account, error) {
-	stmt, err := r.db.PrepareContext(ctx, `insert into accounts (document_number) values(?)`)
+func (r *accountRepository) Save(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error) {
+	stmt, err := r.db.PrepareContext(ctx, `insert into accounts (document_number, available_credit_limit) values(?, ?)`)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := stmt.ExecContext(ctx, docNumber)
+	result, err := stmt.ExecContext(ctx, docNumber, availableCreditLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -37,13 +37,14 @@ func (r *accountRepository) Save(ctx context.Context, docNumber string) (*entity
 	}
 
 	return &entity.Account{
-		ID:             int(id),
-		DocumentNumber: docNumber,
+		ID:                   int(id),
+		DocumentNumber:       docNumber,
+		AvailabelCreditLimit: availableCreditLimit,
 	}, nil
 }
 
 func (r accountRepository) GetByID(ctx context.Context, id int) (*entity.Account, error) {
-	stmt, err := r.db.PrepareContext(ctx, `select id, document_number from accounts where id = ?`)
+	stmt, err := r.db.PrepareContext(ctx, `select id, document_number, available_credit_limit from accounts where id = ?`)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func (r accountRepository) GetByID(ctx context.Context, id int) (*entity.Account
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&acc.ID, &acc.DocumentNumber)
+		err = rows.Scan(&acc.ID, &acc.DocumentNumber, &acc.AvailabelCreditLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -66,4 +67,28 @@ func (r accountRepository) GetByID(ctx context.Context, id int) (*entity.Account
 	}
 
 	return &acc, nil
+}
+
+func (r accountRepository) Update(ctx context.Context, account *entity.Account) (*entity.Account, error) {
+	stmt, err := r.db.PrepareContext(ctx, `update accounts set document_number = ?, available_credit_limit = ? where id = ?`)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := stmt.ExecContext(ctx, account.DocumentNumber, account.AvailabelCreditLimit, account.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
