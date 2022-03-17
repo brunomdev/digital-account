@@ -16,7 +16,7 @@ func NewAccountRepository(db *sql.DB) account.Repository {
 }
 
 func (r *accountRepository) Save(ctx context.Context, docNumber string) (*entity.Account, error) {
-	stmt, err := r.db.PrepareContext(ctx, `insert into accounts (document_number) values(?)`)
+	stmt, err := r.db.PrepareContext(ctx, `INSERT INTO accounts (document_number) VALUES(?)`)
 	if err != nil {
 		return nil, err
 	}
@@ -26,10 +26,7 @@ func (r *accountRepository) Save(ctx context.Context, docNumber string) (*entity
 		return nil, err
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		return nil, err
-	}
+	defer stmt.Close()
 
 	id, err := result.LastInsertId()
 	if err != nil {
@@ -43,7 +40,7 @@ func (r *accountRepository) Save(ctx context.Context, docNumber string) (*entity
 }
 
 func (r accountRepository) GetByID(ctx context.Context, id int) (*entity.Account, error) {
-	stmt, err := r.db.PrepareContext(ctx, `select id, document_number from accounts where id = ?`)
+	stmt, err := r.db.PrepareContext(ctx, `SELECT id, document_number FROM accounts WHERE id = ?`)
 	if err != nil {
 		return nil, err
 	}
