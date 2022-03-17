@@ -13,8 +13,8 @@ import (
 )
 
 func Test_transactionRepository_Save(t *testing.T) {
-	insertQuery := "INSERT INT transactions (account_id, operation_type_id, amount) VALUES(?, ?, ?)"
-	selectQuery := "SELECT id, account_id, operation_type_id, amount, created_at FROM accounts WHERE id = ?"
+	insertQuery := "INSERT INTO transactions (account_id, operation_type_id, amount) VALUES(?, ?, ?)"
+	selectQuery := "SELECT id, account_id, operation_type_id, amount, created_at FROM transactions WHERE id = ?"
 
 	type args struct {
 		ctx             context.Context
@@ -164,7 +164,7 @@ func Test_transactionRepository_Save(t *testing.T) {
 }
 
 func Test_transactionRepository_GetByID(t *testing.T) {
-	selectQuery := "SELECT id, account_id, operation_type_id, amount, created_at FROM accounts WHERE id = ?"
+	selectQuery := "SELECT id, account_id, operation_type_id, amount, created_at FROM transactions WHERE id = ?"
 
 	type args struct {
 		ctx context.Context
