@@ -16,7 +16,7 @@ func NewTransactionRepository(db *sql.DB) transaction.Repository {
 }
 
 func (r transactionRepository) Save(ctx context.Context, accountID, operationTypeID int, amount float64) (*entity.Transaction, error) {
-	stmt, err := r.db.PrepareContext(ctx, `INSERT INT transactions (account_id, operation_type_id, amount) VALUES(?, ?, ?)`)
+	stmt, err := r.db.PrepareContext(ctx, `INSERT INTO transactions (account_id, operation_type_id, amount) VALUES(?, ?, ?)`)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r transactionRepository) Save(ctx context.Context, accountID, operationTyp
 }
 
 func (r transactionRepository) GetByID(ctx context.Context, id int) (*entity.Transaction, error) {
-	stmt, err := r.db.PrepareContext(ctx, `SELECT id, account_id, operation_type_id, amount, created_at FROM accounts WHERE id = ?`)
+	stmt, err := r.db.PrepareContext(ctx, `SELECT id, account_id, operation_type_id, amount, created_at FROM transactions WHERE id = ?`)
 	if err != nil {
 		return nil, err
 	}
