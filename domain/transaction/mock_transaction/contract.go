@@ -73,6 +73,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// GetByID mocks base method.
+func (m *MockRepository) GetByID(ctx context.Context, id int) (*entity.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByID", ctx, id)
+	ret0, _ := ret[0].(*entity.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByID indicates an expected call of GetByID.
+func (mr *MockRepositoryMockRecorder) GetByID(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockRepository)(nil).GetByID), ctx, id)
+}
+
 // Save mocks base method.
 func (m *MockRepository) Save(ctx context.Context, accountID, operationTypeID int, amount float64) (*entity.Transaction, error) {
 	m.ctrl.T.Helper()

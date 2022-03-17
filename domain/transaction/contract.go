@@ -13,4 +13,5 @@ type Service interface {
 
 type Repository interface {
 	Save(ctx context.Context, accountID, operationTypeID int, amount float64) (*entity.Transaction, error)
+	GetByID(ctx context.Context, id int) (*entity.Transaction, error)
 }

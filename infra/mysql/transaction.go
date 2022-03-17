@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"github.com/brunomdev/digital-account/domain/transaction"
 	"github.com/brunomdev/digital-account/entity"
-	"time"
 )
 
 type transactionRepository struct {
@@ -17,7 +16,7 @@ func NewTransactionRepository(db *sql.DB) transaction.Repository {
 }
 
 func (r transactionRepository) Save(ctx context.Context, accountID, operationTypeID int, amount float64) (*entity.Transaction, error) {
-	stmt, err := r.db.PrepareContext(ctx, `insert into transactions (account_id, operation_type_id, amount) values(?, ?, ?)`)
+	stmt, err := r.db.PrepareContext(ctx, `INSERT INT transactions (account_id, operation_type_id, amount) VALUES(?, ?, ?)`)
 	if err != nil {
 		return nil, err
 	}
@@ -27,21 +26,38 @@ func (r transactionRepository) Save(ctx context.Context, accountID, operationTyp
 		return nil, err
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		return nil, err
-	}
+	defer stmt.Close()
 
 	id, err := result.LastInsertId()
 	if err != nil {
 		return nil, err
 	}
 
-	return &entity.Transaction{
-		ID:              int(id),
-		AccountID:       accountID,
-		OperationTypeID: operationTypeID,
-		Amount:          amount,
-		EventDate:       time.Now(),
-	}, nil
+	return r.GetByID(ctx, int(id))
+}
+
+func (r transactionRepository) GetByID(ctx context.Context, id int) (*entity.Transaction, error) {
+	stmt, err := r.db.PrepareContext(ctx, `SELECT id, account_id, operation_type_id, amount, created_at FROM accounts WHERE id = ?`)
+	if err != nil {
+		return nil, err
+	}
+
+	var txn entity.Transaction
+	rows, err := stmt.QueryContext(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&txn.ID, &txn.AccountID, &txn.OperationTypeID, &txn.Amount, &txn.EventDate)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if txn.ID < 1 {
+		return nil, entity.ErrNotFound
+	}
+
+	return &txn, nil
 }
