@@ -51,16 +51,7 @@ func (h *transactionHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		log.Error(c.Context(), "unable to create transaction", err)
 
-		errStatus := fiber.StatusInternalServerError
-		errResponse := presenter.ErrorResponse{
-			Title: "Error while creating Transaction",
-		}
-
-		if errors.Is(err, entity.ErrNotFound) {
-			errStatus = fiber.StatusNotFound
-			errResponse.Title = "Resource not found"
-			errResponse.Detail = err.Error()
-		}
+		errStatus, errResponse := h.formatErrResponse(err)
 
 		return c.Status(errStatus).JSON(errResponse)
 	}
@@ -74,4 +65,28 @@ func (h *transactionHandler) Create(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
+}
+
+func (h *transactionHandler) formatErrResponse(err error) (int, presenter.ErrorResponse) {
+	errStatus := fiber.StatusInternalServerError
+	errResponse := presenter.ErrorResponse{
+		Title: "Error while creating Transaction",
+	}
+
+	switch {
+	case errors.Is(err, entity.ErrNotFound):
+		errStatus = fiber.StatusNotFound
+		errResponse.Title = "Resource not found"
+		errResponse.Detail = err.Error()
+	case errors.Is(err, entity.ErrInvalidAmount):
+		errStatus = fiber.StatusBadRequest
+		errResponse.Title = "Amount informed is Invalid"
+		errResponse.Detail = err.Error()
+	case errors.Is(err, entity.ErrInsufficientCreditLimit):
+		errStatus = fiber.StatusBadRequest
+		errResponse.Title = "Insufficient Available Credit Limit"
+		errResponse.Detail = err.Error()
+	}
+
+	return errStatus, errResponse
 }
