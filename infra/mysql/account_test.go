@@ -12,11 +12,12 @@ import (
 )
 
 func Test_accountRepository_Save(t *testing.T) {
-	insertQuery := "INSERT INTO accounts (document_number) VALUES(?)"
+	insertQuery := "INSERT INTO accounts (document_number, available_credit_limit) VALUES(?, ?)"
 
 	type args struct {
-		ctx       context.Context
-		docNumber string
+		ctx                  context.Context
+		docNumber            string
+		availableCreditLimit float64
 	}
 	testCases := []struct {
 		name    string
@@ -39,8 +40,9 @@ func Test_accountRepository_Save(t *testing.T) {
 				return db, mock, nil
 			},
 			args: args{
-				ctx:       context.TODO(),
-				docNumber: "12345678900",
+				ctx:                  context.TODO(),
+				docNumber:            "12345678900",
+				availableCreditLimit: 50.00,
 			},
 			want:    nil,
 			wantErr: assert.Error,
@@ -54,14 +56,15 @@ func Test_accountRepository_Save(t *testing.T) {
 				}
 
 				mock.ExpectPrepare(insertQuery).ExpectExec().
-					WithArgs("12345678900").
+					WithArgs("12345678900", 50.00).
 					WillReturnError(errors.New("error"))
 
 				return db, mock, nil
 			},
 			args: args{
-				ctx:       context.TODO(),
-				docNumber: "12345678900",
+				ctx:                  context.TODO(),
+				docNumber:            "12345678900",
+				availableCreditLimit: 50.00,
 			},
 			want:    nil,
 			wantErr: assert.Error,
@@ -100,12 +103,14 @@ func Test_accountRepository_Save(t *testing.T) {
 				return db, mock, nil
 			},
 			args: args{
-				ctx:       context.TODO(),
-				docNumber: "12345678900",
+				ctx:                  context.TODO(),
+				docNumber:            "12345678900",
+				availableCreditLimit: 50.00,
 			},
 			want: &entity.Account{
-				ID:             1,
-				DocumentNumber: "12345678900",
+				ID:                   1,
+				DocumentNumber:       "12345678900",
+				AvailabelCreditLimit: 50.00,
 			},
 			wantErr: assert.NoError,
 		},
@@ -123,7 +128,7 @@ func Test_accountRepository_Save(t *testing.T) {
 
 			r := NewAccountRepository(db)
 
-			got, err := r.Save(tc.args.ctx, tc.args.docNumber)
+			got, err := r.Save(tc.args.ctx, tc.args.docNumber, tc.args.availableCreditLimit)
 			if !tc.wantErr(t, err, fmt.Sprintf("Save(%v, %v)", tc.args.ctx, tc.args.docNumber)) {
 				return
 			}
@@ -133,7 +138,7 @@ func Test_accountRepository_Save(t *testing.T) {
 }
 
 func Test_accountRepository_GetByID(t *testing.T) {
-	selectQuery := "SELECT id, document_number FROM accounts WHERE id = ?"
+	selectQuery := "SELECT id, document_number, available_credit_limit FROM accounts WHERE id = ?"
 
 	type args struct {
 		ctx context.Context
@@ -197,8 +202,8 @@ func Test_accountRepository_GetByID(t *testing.T) {
 				mock.ExpectPrepare(selectQuery).
 					ExpectQuery().WithArgs(1).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "document_number"}).
-							AddRow(false, "12345678900"),
+						sqlmock.NewRows([]string{"id", "document_number", "available_credit_limit"}).
+							AddRow(false, "12345678900", 50.00),
 					)
 
 				return db, mock, nil
@@ -221,7 +226,7 @@ func Test_accountRepository_GetByID(t *testing.T) {
 				mock.ExpectPrepare(selectQuery).
 					ExpectQuery().WithArgs(1).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "document_number"}),
+						sqlmock.NewRows([]string{"id", "document_number", "available_credit_limit"}),
 					)
 
 				return db, mock, nil
@@ -244,8 +249,8 @@ func Test_accountRepository_GetByID(t *testing.T) {
 				mock.ExpectPrepare(selectQuery).
 					ExpectQuery().WithArgs(1).
 					WillReturnRows(
-						sqlmock.NewRows([]string{"id", "document_number"}).
-							AddRow(1, "12345678900"),
+						sqlmock.NewRows([]string{"id", "document_number", "available_credit_limit"}).
+							AddRow(1, "12345678900", 50.00),
 					)
 
 				return db, mock, nil
@@ -255,8 +260,9 @@ func Test_accountRepository_GetByID(t *testing.T) {
 				id:  1,
 			},
 			want: &entity.Account{
-				ID:             1,
-				DocumentNumber: "12345678900",
+				ID:                   1,
+				DocumentNumber:       "12345678900",
+				AvailabelCreditLimit: 50.00,
 			},
 			wantErr: assert.NoError,
 		},

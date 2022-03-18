@@ -60,7 +60,7 @@ func Test_accountHandler_Create(t *testing.T) {
 			svcArgs: func(ctrl *gomock.Controller) account.Service {
 				svc := mock_account.NewMockService(ctrl)
 
-				svc.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+				svc.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 
 				return svc
 			},
@@ -75,11 +75,12 @@ func Test_accountHandler_Create(t *testing.T) {
 			svcArgs: func(ctrl *gomock.Controller) account.Service {
 				svc := mock_account.NewMockService(ctrl)
 
-				svc.EXPECT().Create(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, docNumber string) (*entity.Account, error) {
+				svc.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error) {
 						return &entity.Account{
-							ID:             1,
-							DocumentNumber: docNumber,
+							ID:                   1,
+							DocumentNumber:       docNumber,
+							AvailabelCreditLimit: availableCreditLimit,
 						}, nil
 					})
 
@@ -168,15 +169,16 @@ func Test_accountHandler_Get(t *testing.T) {
 			},
 		},
 		{
-			name: "Error service",
+			name: "Success",
 			eventService: func(ctrl *gomock.Controller) account.Service {
 				svc := mock_account.NewMockService(ctrl)
 
 				svc.EXPECT().Get(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, id int) (*entity.Account, error) {
 						return &entity.Account{
-							ID:             id,
-							DocumentNumber: "12345678900",
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 5000.00,
 						}, nil
 					})
 
@@ -186,8 +188,9 @@ func Test_accountHandler_Get(t *testing.T) {
 			wantStatus: http.StatusOK,
 			wantBody: func() ([]byte, error) {
 				return json.Marshal(presenter.AccountResponse{
-					ID:             2,
-					DocumentNumber: "12345678900",
+					ID:                   2,
+					DocumentNumber:       "12345678900",
+					AvailableCreditLimit: 5000.00,
 				})
 			},
 		},

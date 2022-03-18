@@ -80,6 +80,44 @@ func Test_transactionHandler_Create(t *testing.T) {
 			},
 		},
 		{
+			name: "Error service invalid amount",
+			svcArgs: func(ctrl *gomock.Controller) transaction.Service {
+				svc := mock_transaction.NewMockService(ctrl)
+
+				svc.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, entity.ErrInvalidAmount)
+
+				return svc
+			},
+			reqBody:    []byte(`{"account_id": 1, "operation_type_id": 4, "amount": -123.45}`),
+			wantStatus: http.StatusBadRequest,
+			wantBody: func() ([]byte, error) {
+				return json.Marshal(presenter.ErrorResponse{
+					Title:  "Amount informed is Invalid",
+					Detail: "invalid amount",
+				})
+			},
+		},
+		{
+			name: "Error service insufficient credit limit",
+			svcArgs: func(ctrl *gomock.Controller) transaction.Service {
+				svc := mock_transaction.NewMockService(ctrl)
+
+				svc.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, entity.ErrInsufficientCreditLimit)
+
+				return svc
+			},
+			reqBody:    []byte(`{"account_id": 1, "operation_type_id": 4, "amount": -123.45}`),
+			wantStatus: http.StatusBadRequest,
+			wantBody: func() ([]byte, error) {
+				return json.Marshal(presenter.ErrorResponse{
+					Title:  "Insufficient Available Credit Limit",
+					Detail: "available credit limit is insufficient",
+				})
+			},
+		},
+		{
 			name: "Error service generic error",
 			svcArgs: func(ctrl *gomock.Controller) transaction.Service {
 				svc := mock_transaction.NewMockService(ctrl)

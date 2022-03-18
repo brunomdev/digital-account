@@ -25,7 +25,8 @@ func NewAccountHandler(service account.Service) AccountHandler {
 
 func (h *accountHandler) Create(c *fiber.Ctx) error {
 	var input struct {
-		DocumentNumber string `json:"document_number" validate:"required"`
+		DocumentNumber       string  `json:"document_number" validate:"required"`
+		AvailableCreditLimit float64 `json:"available_credit_limit" validate:"min=0"`
 	}
 
 	err := c.BodyParser(&input)
@@ -44,7 +45,7 @@ func (h *accountHandler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errs)
 	}
 
-	acc, err := h.service.Create(c.Context(), input.DocumentNumber)
+	acc, err := h.service.Create(c.Context(), input.DocumentNumber, input.AvailableCreditLimit)
 	if err != nil {
 		log.Error(c.Context(), "unable to create account", err)
 
@@ -54,8 +55,9 @@ func (h *accountHandler) Create(c *fiber.Ctx) error {
 	}
 
 	resp := presenter.AccountResponse{
-		ID:             acc.ID,
-		DocumentNumber: acc.DocumentNumber,
+		ID:                   acc.ID,
+		DocumentNumber:       acc.DocumentNumber,
+		AvailableCreditLimit: acc.AvailabelCreditLimit,
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
@@ -83,8 +85,9 @@ func (h *accountHandler) Get(c *fiber.Ctx) error {
 	}
 
 	resp := presenter.AccountResponse{
-		ID:             acc.ID,
-		DocumentNumber: acc.DocumentNumber,
+		ID:                   acc.ID,
+		DocumentNumber:       acc.DocumentNumber,
+		AvailableCreditLimit: acc.AvailabelCreditLimit,
 	}
 
 	return c.JSON(resp)

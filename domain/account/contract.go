@@ -8,11 +8,13 @@ import (
 )
 
 type Service interface {
-	Create(ctx context.Context, docNumber string) (*entity.Account, error)
+	Create(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error)
 	Get(ctx context.Context, id int) (*entity.Account, error)
+	UpdateCreditLimit(ctx context.Context, id int, availableCreditLimit float64) (*entity.Account, error)
 }
 
 type Repository interface {
-	Save(ctx context.Context, docNumber string) (*entity.Account, error)
+	Save(ctx context.Context, docNumber string, availableCreditLimit float64) (*entity.Account, error)
 	GetByID(ctx context.Context, id int) (*entity.Account, error)
+	Update(ctx context.Context, account *entity.Account) (*entity.Account, error)
 }
