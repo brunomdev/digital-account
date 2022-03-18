@@ -288,3 +288,145 @@ func Test_accountRepository_GetByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_accountRepository_Update(t *testing.T) {
+	updateQuery := "UPDATE accounts SET document_number = ?, available_credit_limit = ? WHERE id = ?"
+
+	type args struct {
+		ctx     context.Context
+		account *entity.Account
+	}
+	testCases := []struct {
+		name    string
+		mock    func() (*sql.DB, sqlmock.Sqlmock, error)
+		args    args
+		want    *entity.Account
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "Error prepare",
+			mock: func() (*sql.DB, sqlmock.Sqlmock, error) {
+				db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+				if err != nil {
+					return nil, nil, err
+				}
+
+				mock.ExpectPrepare(updateQuery).
+					WillReturnError(errors.New("error"))
+
+				return db, mock, nil
+			},
+			args: args{
+				ctx: context.TODO(),
+				account: &entity.Account{
+					ID:                   1,
+					DocumentNumber:       "12345678900",
+					AvailabelCreditLimit: 50.00,
+				},
+			},
+			want:    nil,
+			wantErr: assert.Error,
+		},
+		{
+			name: "Error execution",
+			mock: func() (*sql.DB, sqlmock.Sqlmock, error) {
+				db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+				if err != nil {
+					return nil, nil, err
+				}
+
+				mock.ExpectPrepare(updateQuery).ExpectExec().
+					WithArgs("12345678900", 50.00, 1).
+					WillReturnError(errors.New("error"))
+
+				return db, mock, nil
+			},
+			args: args{
+				ctx: context.TODO(),
+				account: &entity.Account{
+					ID:                   1,
+					DocumentNumber:       "12345678900",
+					AvailabelCreditLimit: 50.00,
+				},
+			},
+			want:    nil,
+			wantErr: assert.Error,
+		},
+		{
+			name: "Error rows affected",
+			mock: func() (*sql.DB, sqlmock.Sqlmock, error) {
+				db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+				if err != nil {
+					return nil, nil, err
+				}
+
+				mock.ExpectPrepare(updateQuery).
+					ExpectExec().
+					WithArgs("12345678900", 50.00, 1).
+					WillReturnResult(sqlmock.NewErrorResult(errors.New("error")))
+
+				return db, mock, nil
+			},
+			args: args{
+				ctx: context.TODO(),
+				account: &entity.Account{
+					ID:                   1,
+					DocumentNumber:       "12345678900",
+					AvailabelCreditLimit: 50.00,
+				},
+			},
+			want:    nil,
+			wantErr: assert.Error,
+		},
+		{
+			name: "Success",
+			mock: func() (*sql.DB, sqlmock.Sqlmock, error) {
+				db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+				if err != nil {
+					return nil, nil, err
+				}
+
+				mock.ExpectPrepare(updateQuery).
+					ExpectExec().
+					WithArgs("12345678900", 50.00, 1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+
+				return db, mock, nil
+			},
+			args: args{
+				ctx: context.TODO(),
+				account: &entity.Account{
+					ID:                   1,
+					DocumentNumber:       "12345678900",
+					AvailabelCreditLimit: 50.00,
+				},
+			},
+			want: &entity.Account{
+				ID:                   1,
+				DocumentNumber:       "12345678900",
+				AvailabelCreditLimit: 50.00,
+			},
+			wantErr: assert.NoError,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			db, mock, err := tc.mock()
+			assert.NoError(t, err)
+
+			defer func() {
+				db.Close()
+				assert.NoError(t, mock.ExpectationsWereMet())
+			}()
+
+			r := NewAccountRepository(db)
+
+			got, err := r.Update(tc.args.ctx, tc.args.account)
+			if !tc.wantErr(t, err, fmt.Sprintf("Update(%v, %v)", tc.args.ctx, tc.args.account)) {
+				return
+			}
+			assert.Equalf(t, tc.want, got, "Update(%v, %v)", tc.args.ctx, tc.args.account)
+		})
+	}
+}
