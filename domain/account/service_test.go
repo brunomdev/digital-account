@@ -157,3 +157,115 @@ func Test_service_Get(t *testing.T) {
 		})
 	}
 }
+
+func Test_service_UpdateCreditLimit(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		id                   int
+		availableCreditLimit float64
+	}
+	testCases := []struct {
+		name    string
+		svcArgs func(ctrl *gomock.Controller) Repository
+		args    args
+		want    *entity.Account
+		wantErr bool
+	}{
+		{
+			name: "Error not found",
+			svcArgs: func(ctrl *gomock.Controller) Repository {
+				repo := mock_account.NewMockRepository(ctrl)
+
+				repo.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(nil, entity.ErrNotFound)
+
+				return repo
+			},
+			args: args{
+				id:                   1,
+				availableCreditLimit: 200,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Error update",
+			svcArgs: func(ctrl *gomock.Controller) Repository {
+				repo := mock_account.NewMockRepository(ctrl)
+
+				repo.EXPECT().GetByID(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 500.00,
+						}, nil
+					})
+
+				repo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+
+				return repo
+			},
+			args: args{
+				id:                   1,
+				availableCreditLimit: 200,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Success",
+			svcArgs: func(ctrl *gomock.Controller) Repository {
+				repo := mock_account.NewMockRepository(ctrl)
+
+				repo.EXPECT().GetByID(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 500.00,
+						}, nil
+					})
+
+				repo.EXPECT().Update(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, account *entity.Account) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   account.ID,
+							DocumentNumber:       account.DocumentNumber,
+							AvailabelCreditLimit: account.AvailabelCreditLimit,
+						}, nil
+					})
+
+				return repo
+			},
+			args: args{
+				id:                   1,
+				availableCreditLimit: 200,
+			},
+			want: &entity.Account{
+				ID:                   1,
+				DocumentNumber:       "12345678900",
+				AvailabelCreditLimit: 200,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			s := NewService(tc.svcArgs(ctrl))
+
+			got, err := s.UpdateCreditLimit(tc.args.ctx, tc.args.id, tc.args.availableCreditLimit)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("UpdateCreditLimit() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Errorf("UpdateCreditLimit() got = %v, want %v, %v", got, tc.want, cmp.Diff(got, tc.want))
+			}
+		})
+	}
+}

@@ -189,6 +189,147 @@ func Test_service_Create(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "Error update credit limit",
+			svcArgs: func(ctrl *gomock.Controller) (Repository, account.Service, operationtype.Service) {
+				repo := mock_transaction.NewMockRepository(ctrl)
+				accountSvc := mock_account.NewMockService(ctrl)
+				opTypeSvc := mock_operationtype.NewMockService(ctrl)
+
+				accountSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, accountID int) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   accountID,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 40.00,
+						}, nil
+					})
+
+				opTypeSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, operationTypeID int) (*entity.OperationType, error) {
+						return &entity.OperationType{
+							ID:          operationTypeID,
+							Description: "PAGAMENTO",
+						}, nil
+					})
+
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+
+				return repo, accountSvc, opTypeSvc
+			},
+			args: args{
+				accountID:       1,
+				operationTypeID: 4,
+				amount:          30.00,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Error save and error rollback credit limit",
+			svcArgs: func(ctrl *gomock.Controller) (Repository, account.Service, operationtype.Service) {
+				repo := mock_transaction.NewMockRepository(ctrl)
+				accountSvc := mock_account.NewMockService(ctrl)
+				opTypeSvc := mock_operationtype.NewMockService(ctrl)
+
+				accountSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, accountID int) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   accountID,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 40.00,
+						}, nil
+					})
+
+				opTypeSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, operationTypeID int) (*entity.OperationType, error) {
+						return &entity.OperationType{
+							ID:          operationTypeID,
+							Description: "PAGAMENTO",
+						}, nil
+					})
+
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: newLimit,
+						}, nil
+					})
+
+				repo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+
+				return repo, accountSvc, opTypeSvc
+			},
+			args: args{
+				accountID:       1,
+				operationTypeID: 4,
+				amount:          30.00,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Error save and success rollback credit limit",
+			svcArgs: func(ctrl *gomock.Controller) (Repository, account.Service, operationtype.Service) {
+				repo := mock_transaction.NewMockRepository(ctrl)
+				accountSvc := mock_account.NewMockService(ctrl)
+				opTypeSvc := mock_operationtype.NewMockService(ctrl)
+
+				accountSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, accountID int) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   accountID,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 40.00,
+						}, nil
+					})
+
+				opTypeSvc.EXPECT().Get(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, operationTypeID int) (*entity.OperationType, error) {
+						return &entity.OperationType{
+							ID:          operationTypeID,
+							Description: "PAGAMENTO",
+						}, nil
+					})
+
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: newLimit,
+						}, nil
+					})
+
+				repo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: 40,
+						}, nil
+					})
+
+				return repo, accountSvc, opTypeSvc
+			},
+			args: args{
+				accountID:       1,
+				operationTypeID: 4,
+				amount:          30.00,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "Success",
 			svcArgs: func(ctrl *gomock.Controller) (Repository, account.Service, operationtype.Service) {
 				repo := mock_transaction.NewMockRepository(ctrl)
@@ -212,6 +353,15 @@ func Test_service_Create(t *testing.T) {
 						}, nil
 					})
 
+				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
+						return &entity.Account{
+							ID:                   id,
+							DocumentNumber:       "12345678900",
+							AvailabelCreditLimit: newLimit,
+						}, nil
+					})
+
 				repo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, accountID, operationTypeID int, amount float64) (*entity.Transaction, error) {
 						return &entity.Transaction{
@@ -220,15 +370,6 @@ func Test_service_Create(t *testing.T) {
 							OperationTypeID: operationTypeID,
 							Amount:          amount,
 							EventDate:       time.Time{},
-						}, nil
-					})
-
-				accountSvc.EXPECT().UpdateCreditLimit(gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
-						return &entity.Account{
-							ID:                   id,
-							DocumentNumber:       "12345678900",
-							AvailabelCreditLimit: newLimit,
 						}, nil
 					})
 
