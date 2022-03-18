@@ -24,13 +24,13 @@ func (s *service) Get(ctx context.Context, id int) (*entity.Account, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *service) UpdateCreditLimit(ctx context.Context, id int, availableCreditLimit float64) (*entity.Account, error) {
+func (s *service) UpdateCreditLimit(ctx context.Context, id int, newLimit float64) (*entity.Account, error) {
 	account, err := s.repo.GetByID(ctx, id)
 	if errors.Is(err, entity.ErrNotFound) {
 		return nil, errors.Wrap(err, "account")
 	}
 
-	account.AvailabelCreditLimit = availableCreditLimit
+	account.AvailabelCreditLimit = newLimit
 
 	return s.repo.Update(ctx, account)
 }
