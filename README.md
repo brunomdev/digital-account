@@ -1,4 +1,4 @@
-Digital Account
+# Digital Account
 
 Service responsible to deal with accounts and transactions.
 
