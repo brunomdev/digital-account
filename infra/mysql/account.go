@@ -26,10 +26,7 @@ func (r *accountRepository) Save(ctx context.Context, docNumber string, availabl
 		return nil, err
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		return nil, err
-	}
+	defer stmt.Close()
 
 	id, err := result.LastInsertId()
 	if err != nil {
@@ -70,7 +67,7 @@ func (r accountRepository) GetByID(ctx context.Context, id int) (*entity.Account
 }
 
 func (r accountRepository) Update(ctx context.Context, account *entity.Account) (*entity.Account, error) {
-	stmt, err := r.db.PrepareContext(ctx, `update accounts set document_number = ?, available_credit_limit = ? where id = ?`)
+	stmt, err := r.db.PrepareContext(ctx, `UPDATE accounts SET document_number = ?, available_credit_limit = ? WHERE id = ?`)
 	if err != nil {
 		return nil, err
 	}
@@ -80,10 +77,7 @@ func (r accountRepository) Update(ctx context.Context, account *entity.Account) 
 		return nil, err
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		return nil, err
-	}
+	defer stmt.Close()
 
 	_, err = result.RowsAffected()
 	if err != nil {
