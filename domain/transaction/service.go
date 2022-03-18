@@ -61,9 +61,9 @@ func (s *service) Create(ctx context.Context, accountID, operationTypeID int, am
 
 	transaction, err := s.repo.Save(ctx, accountID, operationTypeID, amount)
 	if err != nil {
-		_, err = s.accountService.UpdateCreditLimit(ctx, acc.ID, acc.AvailabelCreditLimit)
-		if err != nil {
-			return nil, errors.Wrap(err, "Create")
+		_, errUpd := s.accountService.UpdateCreditLimit(ctx, acc.ID, acc.AvailabelCreditLimit)
+		if errUpd != nil {
+			return nil, errors.Wrap(errUpd, "Create")
 		}
 
 		return nil, errors.Wrap(err, "Create")
